@@ -1,0 +1,150 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100svh;
+    background: #191726 !important;
+    font-family: "Nunito", sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+img {
+    border-radius: 50%;
+    width: clamp(100px, 40vw, 120px);
+    height: clamp(100px, 40vw, 120px);
+    object-fit: cover;
+    object-position: top;
+}
+
+section {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 75em;
+    margin-inline: auto;
+    gap: 0.938rem;
+    transform: translateY(-3em);
+    position: relative;
+    z-index: 10;
+    padding-bottom:7%;
+}
+
+section .card {
+    margin-top: 350px;
+    padding: 1.875em 1.25em;
+    max-width: 18.75rem;
+    width: 20%;
+    height: 16.875rem;
+    display: grid;
+    place-content: center;
+    place-items: center;
+    text-align: center;
+    position: relative;
+    border-radius: 8px;
+    transition: box-shadow 0.3s;
+}
+
+section .card::before {
+    position: absolute;
+    content: "";
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 1rem;
+    z-index: -1;
+    border: 0.125rem solid transparent;
+    background: linear-gradient(45deg, #393753, #6f679b) border-box;
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    border-radius: 8px;
+}
+
+section .card h2 {
+    color: #fff;
+    letter-spacing: 0.05rem;
+    font-size: clamp(1rem, 0.9375rem + 0.3125vw, 1.25rem);
+    margin-top: 0.625em;
+    margin-bottom: 0.188em;
+}
+
+section .card p {
+    color: #afafaf;
+    font-size: clamp(0.8rem, 0.7625rem + 0.1875vw, 0.95rem);
+}
+
+.navbar {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 160px);
+    padding: 1rem 2rem;
+    background: #6b679b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    border-radius: 20px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease-in-out;
+}
+
+.header.transparent {
+    background-color: rgba(16, 16, 16, 0.5);
+    backdrop-filter: blur(5px);
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.header.sticky {
+    border-bottom: 0.1rem solid rgba(0, 0, 0, 0.2);
+}
+
+.navbar a {
+    float: left;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    border-radius: 20px; 
+}
+
+.navbar a:hover {
+    background-color: transparent;
+    backdrop-filter: blur(5px);
+    color: rgb(0, 0, 0);
+    transition: background-color 0.3s ease, color 0.3s ease; 
+}
+
+.home {
+    color: white;
+    margin-right: auto; 
+}
+
+.developer-tab {
+    color: white;
+    margin-right: auto; 
+}
+
+@media only screen and (max-width: 600px) {
+    section .card {
+        margin-top: 150px; 
+    }
+
+    .navbar {
+        padding: 1rem;
+        width: 100%; 
+    }
+
+    .navbar a {
+        font-size: 14px;
+    }
+}
