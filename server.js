@@ -1,55 +1,62 @@
-const express = require('express');
-const session = require('express-session');
-const fs = require('fs');
-const { exec } = require('child_process'); // Import exec to run shell commands
+const express = require("express");
+const session = require("express-session");
+const fs = require("fs");
+const { exec } = require("child_process"); // Import exec to run shell commands
 const app = express();
 const port = process.env.PORT || 4000;
 
-const keysFile = 'keys.txt'; // File to store keys
-const rawkeysFile = 'rawkeys.txt'; // File to store raw keys
-const resetFile = 'last_reset.txt'; // File to store the last reset timestamp
+const keysFile = "keys.txt"; // File to store keys
+const rawkeysFile = "rawkeys.txt"; // File to store raw keys
+const resetFile = "last_reset.txt"; // File to store the last reset timestamp
 
-app.use(session({
-    secret: 'soysauce', // Replace with a strong secret
-    resave: false,
-    saveUninitialized: false
-}));
+app.use(
+    session({
+        secret: "soysauce", // Replace with a strong secret
+        resave: false,
+        saveUninitialized: false,
+    }),
+);
 
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-app.get('/generateKey', (req, res) => {
+app.get("/generateKey", (req, res) => {
     const hwid = req.ip; // Use IP or other unique identifier
     let existingKey = null;
 
     // Read keys from the file and find if the user already has a key
-    fs.readFile(keysFile, 'utf8', (err, data) => {
+    fs.readFile(keysFile, "utf8", (err, data) => {
         if (err) {
-            console.error('Error reading keys file:', err);
-            return res.status(500).send('Internal Server Error');
+            console.error("Error reading keys file:", err);
+            return res.status(500).send("Internal Server Error");
         }
 
         // Check if the user already has a key
-        const keys = data.split('\n');
+        const keys = data.split("\n");
         for (let keyEntry of keys) {
-            const [key, storedHwid] = keyEntry.split(' ');
+            const [key, storedHwid] = keyEntry.split(" ");
             if (storedHwid === hwid) {
                 existingKey = key;
                 break;
             }
         }
 
-        // If the user has an existing key, check if 24 hours have passed
-        if (existingKey) {
-            const currentTime = new Date().getTime();
-            const lastResetTime = fs.existsSync(resetFile) ? parseInt(fs.readFileSync(resetFile, 'utf8')) : 0;
-            const oneDayInMillis = 24 * 60 * 60 * 1000;
+        const currentTime = new Date().getTime();
+        const oneDayInMillis = 24 * 60 * 60 * 1000;
+        let lastResetTime = 0;
 
-            if (currentTime - lastResetTime < oneDayInMillis) {
-                return res.json({ message: 'You already have a generated key. Please use the existing key or wait 24 hours.' });
-            }
+        if (fs.existsSync(resetFile)) {
+            lastResetTime = parseInt(fs.readFileSync(resetFile, "utf8"));
         }
 
-        // If no key exists or 24 hours have passed, generate a new one
+        // Check if the last reset was less than 24 hours ago
+        if (existingKey && currentTime - lastResetTime < oneDayInMillis) {
+            return res.json({
+                message:
+                    "You already have a generated key. Please use the existing key or wait 24 hours.",
+            });
+        }
+
+        // If no existing key or 24 hours have passed, generate a new key
         const newKey = generateRandomKey();
         req.session.key = newKey;
 
@@ -65,17 +72,23 @@ app.get('/generateKey', (req, res) => {
                 console.error("Error writing to rawkeys.txt:", err);
             } else {
                 // Git commit/push logic can go here
-                exec('git config user.email "nawsifsmail@gmail.com" && git config user.name "Nawsomey" && git add . && git commit -m "Add new key" && git push --set-upstream origin main', (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`Git push error: ${error.message}`);
-                    }
-                    if (stderr) {
-                        console.error(`Git push stderr: ${stderr}`);
-                    }
-                    console.log(`Git push stdout: ${stdout}`);
-                });
+                exec(
+                    'git add . && git commit -m "Add new key" && git push --set-upstream origin main',
+                    (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`Git push error: ${error.message}`);
+                        }
+                        if (stderr) {
+                            console.error(`Git push stderr: ${stderr}`);
+                        }
+                        console.log(`Git push stdout: ${stdout}`);
+                    },
+                );
             }
         });
+
+        // After generating a new key, update the last reset time
+        fs.writeFileSync(resetFile, currentTime.toString());
 
         res.json({ secretKey: newKey });
     });
@@ -83,9 +96,11 @@ app.get('/generateKey', (req, res) => {
 
 // Function to generate a random 16-character key
 function generateRandomKey() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let key = '';
-    for (let i = 0; i < 16; i++) { // Generate a 16-character key
+    const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let key = "";
+    for (let i = 0; i < 16; i++) {
+        // Generate a 16-character key
         key += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return key;
@@ -97,13 +112,15 @@ function clearKeys() {
     const oneDayInMillis = 24 * 60 * 60 * 1000;
 
     // Check if 24 hours have passed since the last key reset
-    const lastResetTime = fs.existsSync(resetFile) ? parseInt(fs.readFileSync(resetFile, 'utf8')) : 0;
+    const lastResetTime = fs.existsSync(resetFile)
+        ? parseInt(fs.readFileSync(resetFile, "utf8"))
+        : 0;
     if (currentTime - lastResetTime >= oneDayInMillis) {
         // Reset the keys and update the last reset time
-        fs.writeFileSync(keysFile, ''); // Clear the keys.txt file
-        fs.writeFileSync(rawkeysFile, ''); // Clear the rawkeys.txt file
+        fs.writeFileSync(keysFile, ""); // Clear the keys.txt file
+        fs.writeFileSync(rawkeysFile, ""); // Clear the rawkeys.txt file
         fs.writeFileSync(resetFile, currentTime.toString()); // Update the last reset time
-        console.log('Keys reset successfully.');
+        console.log("Keys reset successfully.");
     }
 }
 
