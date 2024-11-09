@@ -1,63 +1,47 @@
 const express = require('express');
-const fingerprint = require('fingerprintjs2');
-
+const session = require('express-session');
+const fs = require('fs'); 
 const app = express();
 const port = process.env.PORT || 4000;
 
-const userKeys = new Map();
+const keysFile = 'keys.txt'; // File to store keys
 
-app.use(express.static('public')); // public directory
+app.use(session({
+    secret: 'soysauce', // Replace with a strong secret
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use(express.static('public'));
 
 app.get('/generateKey', (req, res) => {
-    getHWID(req.headers['user-agent'], (hwid) => {
-        if (userKeys.has(hwid)) {
-            const existingKey = userKeys.get(hwid);
-            res.json({ secretKey: existingKey, hwid: hwid });
-        } else {
-            const newKey = generateRandomKey();
-            userKeys.set(hwid, newKey);
-
-            setTimeout(() => {
-                userKeys.delete(hwid);
-            }, 24 * 60 * 60 * 1000);
-
-            res.json({ secretKey: newKey, hwid: hwid });
-        }
-    });
-});
-
-app.get('/validateKey/:key', (req, res) => {
-    const key = req.params.key;
-
-    const userWithKey = Array.from(userKeys.entries()).find(([_, userKey]) => userKey === key);
-
-    if (userWithKey) {
-        res.json({ valid: true });
+    // Check if a key already exists in the session
+    if (req.session.key) {
+        res.json({ secretKey: req.session.key });
     } else {
-        res.json({ valid: false });
+        const newKey = generateRandomKey();
+        req.session.key = newKey;
+
+        // Get user's IP address as a simple identifier (consider more robust options)
+        const hwid = req.ip; // Use a more robust method if needed
+
+        // Write key and hwid to keys.txt
+        fs.appendFile(keysFile, `${newKey} ${hwid}\n`, (err) => {
+            if (err) {
+                console.error("Error writing to keys.txt:", err);
+            }
+        });
+
+        res.json({ secretKey: newKey });
     }
 });
 
-app.get('/retrieveKey', (req, res) => {
-    getHWID(req.headers['user-agent'], (hwid) => {
-        const userKey = userKeys.get(hwid);
-        res.json({ key: userKey });
-    });
-});
-
-function getHWID(userAgent, callback) {
-    const options = { excludes: { plugins: true } };
-    fingerprint.get(options, (result) => {
-        const values = result.map(component => component.value);
-        const hwid = fingerprint.x64hash128(values.join(''), 31);
-        callback(hwid);
-    });
-}
+// ... other routes ...
 
 function generateRandomKey() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let key = '';
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 16; i++) { // Generate a 16-character key
         key += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return key;
