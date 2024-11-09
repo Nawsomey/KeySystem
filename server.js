@@ -1,10 +1,12 @@
 const express = require('express');
 const session = require('express-session');
-const fs = require('fs'); 
+const fs = require('fs');
+const { exec } = require('child_process'); // Import exec to run shell commands
 const app = express();
 const port = process.env.PORT || 4000;
 
 const keysFile = 'keys.txt'; // File to store keys
+const rawkeysFile = 'rawkeys.txt'; // File to store raw keys
 
 app.use(session({
     secret: 'soysauce', // Replace with a strong secret
@@ -29,6 +31,22 @@ app.get('/generateKey', (req, res) => {
         fs.appendFile(keysFile, `${newKey} ${hwid}\n`, (err) => {
             if (err) {
                 console.error("Error writing to keys.txt:", err);
+            }
+        });
+        fs.appendFile(rawkeysFile, `${newKey}\n`, (err) => {
+            if (err) {
+                console.error("Error writing to rawkeys.txt:", err);
+            } else {
+                // Run Git push command after writing to rawkeys.txt
+                exec('git add . && git commit -m "Add new key" && git push --set-upstream origin main', (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`Git push error: ${error.message}`);
+                    }
+                    if (stderr) {
+                        console.error(`Git push stderr: ${stderr}`);
+                    }
+                    console.log(`Git push stdout: ${stdout}`);
+                });
             }
         });
 
