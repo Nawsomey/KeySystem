@@ -19,14 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/generateKey')
             .then(response => response.json())
             .then(data => {
-                generatedKey.textContent = data.secretKey;
-                showNotification('Key generated!', 'success');
+                if (data.error) {
+                    showNotification(data.error, 'error');
+                } else {
+                    generatedKey.textContent = data.secretKey;
+                    showNotification('Key generated!', 'success');
+                }
             })
             .catch(error => {
                 console.error('Error fetching key:', error);
                 showNotification('Error generating key', 'error');
             });
     }
+
 
     function copyKey() {
         navigator.clipboard.writeText(generatedKey.textContent)
