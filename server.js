@@ -53,14 +53,14 @@ app.get('/generateKey', (req, res) => {
         if (err) {
             console.error("Error writing to rawkeys.txt:", err);
         } else {
-            exec('git add . && git commit -m "Add new key" && git push --set-upstream origin main', (error, stdout, stderr) => {
-                if (error) {
-                    console.error(`Git push error: ${error.message}`);
-                }
-                if (stderr) {
-                    console.error(`Git push stderr: ${stderr}`);
-                }
-                console.log(`Git push stdout: ${stdout}`);
+                exec('git config user.email "nawsifsmail@gmail.com" && git config user.name "Nawsomey" && git add . && git commit -m "Add new key" && git push --set-upstream origin main', (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`Git push error: ${error.message}`);
+                    }
+                    if (stderr) {
+                        console.error(`Git push stderr: ${stderr}`);
+                    }
+                    console.log(`Git push stdout: ${stdout}`);
             });
         }
     });
