@@ -1,12 +1,15 @@
 const express = require('express');
 const session = require('express-session');
 const fs = require('fs');
-const { exec } = require('child_process'); // Import exec to run shell commands
+const { exec } = require('child_process');
 const app = express();
 const port = process.env.PORT || 4000;
 
 const keysFile = 'keys.txt'; // File to store keys
 const rawkeysFile = 'rawkeys.txt'; // File to store raw keys
+
+// Store user key generation times in-memory (or use a database for persistence across restarts)
+const userKeyTimestamps = {};
 
 app.use(session({
     secret: 'soysauce', // Replace with a strong secret
@@ -16,35 +19,31 @@ app.use(session({
 
 app.use(express.static('public'));
 
-app.get('/getKey', (req, res) => {
-    if (req.session.key) {
-        // If a key is already present in the session, send it to the client
-        res.json({ secretKey: req.session.key });
-    } else {
-        // If no key is available, send an empty response
-        res.json({ secretKey: null });
-    }
-});
-
 app.get('/generateKey', (req, res) => {
+    const userIP = req.ip;
+
+    // Check if the user has a timestamp recorded
+    const lastGeneratedTime = userKeyTimestamps[userIP];
     const twentyFourHours = 24 * 60 * 60 * 1000;
 
-    if (req.session.key && req.session.keyTimestamp) {
-        const timeElapsed = Date.now() - req.session.keyTimestamp;
-
-        if (timeElapsed < twentyFourHours) {
-            return res.json({
-                error: "You already have a generated key. Please use the existing key or wait 24 hours."
-            });
-        }
+    if (lastGeneratedTime && Date.now() - lastGeneratedTime < twentyFourHours) {
+        // If the user already generated a key in the last 24 hours, deny new key generation
+        return res.json({
+            error: "You already have a generated key. Please use the existing key or wait 24 hours."
+        });
     }
 
+    // Generate a new key since it's either a new user or 24 hours have passed
     const newKey = generateRandomKey();
-    req.session.key = newKey;
-    req.session.keyTimestamp = Date.now();
+    userKeyTimestamps[userIP] = Date.now(); // Update the timestamp for this user
 
+    // Store the new key in the session
+    req.session.key = newKey;
+
+    // Get user's IP address as a simple identifier (consider more robust options)
     const hwid = req.ip;
 
+    // Write the new key and hwid to keys.txt and rawkeys.txt
     fs.appendFile(keysFile, `${newKey} ${hwid}\n`, (err) => {
         if (err) {
             console.error("Error writing to keys.txt:", err);
@@ -66,11 +65,45 @@ app.get('/generateKey', (req, res) => {
         }
     });
 
+    // Respond with the new key
     res.json({ secretKey: newKey });
 });
 
-// ... other routes ...
+// Endpoint to retrieve the current key, in case the page reloads
+app.get('/getKey', (req, res) => {
+    if (req.session.key) {
+        res.json({ secretKey: req.session.key });
+    } else {
+        res.json({ secretKey: null });
+    }
+});
 
+// Function to clear all keys in the txt files every 24 hours
+function clearKeysFiles() {
+    fs.writeFile(keysFile, '', (err) => {
+        if (err) {
+            console.error("Error clearing keys.txt:", err);
+        } else {
+            console.log("keys.txt has been cleared.");
+        }
+    });
+
+    fs.writeFile(rawkeysFile, '', (err) => {
+        if (err) {
+            console.error("Error clearing rawkeys.txt:", err);
+        } else {
+            console.log("rawkeys.txt has been cleared.");
+        }
+    });
+}
+
+// Schedule the file clearing every 24 hours (86400000 milliseconds)
+setInterval(clearKeysFiles, 24 * 60 * 60 * 1000);
+
+// You can also run it once when the server starts
+clearKeysFiles();
+
+// Function to generate a random key (16 characters long)
 function generateRandomKey() {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let key = '';
