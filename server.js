@@ -1,25 +1,27 @@
-const express = require('express');
-const session = require('express-session');
-const fs = require('fs');
-const { exec } = require('child_process');
+const express = require("express");
+const session = require("express-session");
+const fs = require("fs");
+const { exec } = require("child_process");
 const app = express();
 const port = process.env.PORT || 4000;
 
-const keysFile = 'keys.txt'; // File to store keys
-const rawkeysFile = 'rawkeys.txt'; // File to store raw keys
+const keysFile = "keys.txt"; // File to store keys
+const rawkeysFile = "rawkeys.txt"; // File to store raw keys
 
 // Store user key generation times in-memory (or use a database for persistence across restarts)
 const userKeyTimestamps = {};
 
-app.use(session({
-    secret: 'soysauce', // Replace with a strong secret
-    resave: false,
-    saveUninitialized: false
-}));
+app.use(
+    session({
+        secret: "soysauce", // Replace with a strong secret
+        resave: false,
+        saveUninitialized: false,
+    }),
+);
 
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-app.get('/generateKey', (req, res) => {
+app.get("/generateKey", (req, res) => {
     const userIP = req.ip;
 
     // Check if the user has a timestamp recorded
@@ -29,7 +31,7 @@ app.get('/generateKey', (req, res) => {
     if (lastGeneratedTime && Date.now() - lastGeneratedTime < twentyFourHours) {
         // If the user already generated a key in the last 24 hours, deny new key generation
         return res.json({
-            error: "You already have a generated key. Please use the existing key or wait 24 hours."
+            error: "You already have a generated key. Please use the existing key or wait 24 hours.",
         });
     }
 
@@ -53,7 +55,9 @@ app.get('/generateKey', (req, res) => {
         if (err) {
             console.error("Error writing to rawkeys.txt:", err);
         } else {
-                exec('git config user.email "nawsifsmail@gmail.com" && git config user.name "Nawsomey" && git add . && git commit -m "Add new key" && git push --set-upstream origin main', (error, stdout, stderr) => {
+            exec(
+                'git config user.email "nawsifsmail@gmail.com" && git config user.name "Nawsomey" && git add . && git commit -m "Add new key" && git push --set-upstream origin main',
+                (error, stdout, stderr) => {
                     if (error) {
                         console.error(`Git push error: ${error.message}`);
                     }
@@ -61,7 +65,8 @@ app.get('/generateKey', (req, res) => {
                         console.error(`Git push stderr: ${stderr}`);
                     }
                     console.log(`Git push stdout: ${stdout}`);
-            });
+                },
+            );
         }
     });
 
@@ -70,7 +75,7 @@ app.get('/generateKey', (req, res) => {
 });
 
 // Endpoint to retrieve the current key, in case the page reloads
-app.get('/getKey', (req, res) => {
+app.get("/getKey", (req, res) => {
     if (req.session.key) {
         res.json({ secretKey: req.session.key });
     } else {
@@ -80,7 +85,7 @@ app.get('/getKey', (req, res) => {
 
 // Function to clear all keys in the txt files every 24 hours
 function clearKeysFiles() {
-    fs.writeFile(keysFile, '', (err) => {
+    fs.writeFile(keysFile, "", (err) => {
         if (err) {
             console.error("Error clearing keys.txt:", err);
         } else {
@@ -88,7 +93,7 @@ function clearKeysFiles() {
         }
     });
 
-    fs.writeFile(rawkeysFile, '', (err) => {
+    fs.writeFile(rawkeysFile, "", (err) => {
         if (err) {
             console.error("Error clearing rawkeys.txt:", err);
         } else {
@@ -100,14 +105,13 @@ function clearKeysFiles() {
 // Schedule the file clearing every 24 hours (86400000 milliseconds)
 setInterval(clearKeysFiles, 24 * 60 * 60 * 1000);
 
-// You can also run it once when the server starts
-clearKeysFiles();
-
 // Function to generate a random key (16 characters long)
 function generateRandomKey() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let key = '';
-    for (let i = 0; i < 16; i++) { // Generate a 16-character key
+    const characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let key = "";
+    for (let i = 0; i < 16; i++) {
+        // Generate a 16-character key
         key += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return key;
