@@ -4,6 +4,11 @@ const fs = require("fs");
 const { exec } = require("child_process");
 const app = express();
 const port = process.env.PORT || 4000;
+const path = require("path");
+
+app.get("/keygenerator.html", (req, res) => {
+    res.sendFile(path.join(__dirname, "public/keygenerator.html"));
+});
 
 const keysFile = "keys.txt"; // File to store keys
 const rawkeysFile = "rawkeys.txt"; // File to store raw keys
