@@ -1,91 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="./style/styles.css" />
-        <title>Menu - Key Generator</title>
-    </head>
 
-    <body>
-        <div class="container">
-            <h1>Welcome to the Key Generator</h1>
-            <p>
-                Please complete the verification using one of the options below
-                to access the key generator.
-            </p>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://publisher.linkvertise.com/cdn/linkvertise.js"></script>
+    <script>
+        linkvertise(483280, { whitelist: [], blacklist: [""] });
+    </script>
+</head>
 
-            <!-- Linkvertise button -->
-            <a
-                href="https://link-center.net/483280/xbomb-key-system1"
-                target="_blank"
-                class="verification-link"
-                id="linkvertiseBtn"
-            >
-                Verify with Linkvertise
-            </a>
+<body>
+    <div class="container">
+        <h1>Key Generator</h1>
+        <button id="generateKeyBtn" class="generate-btn">Generate Key</button>
+        <div id="generatedKey"></div>
+        <div id="notification" class="notification"></div>
+    </div>
 
-            <!-- Lootlabs button -->
-            <a
-                href="https://loot-link.com/s?8c2ca3ba"
-                target="_blank"
-                class="verification-link"
-                id="lootlabsBtn"
-            >
-                Verify with Lootlabs
-            </a>
+    <script src="app.js"></script>
+</body>
 
-            <!-- Proceed button -->
-            <button id="proceedBtn" class="proceed-btn" disabled>
-                Proceed to Key Generator
-            </button>
-
-            <div id="notification" class="notification"></div>
-        </div>
-
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const proceedBtn = document.getElementById("proceedBtn");
-                const notification = document.getElementById("notification");
-                let verificationComplete = false;
-
-                // Handle verification with Linkvertise
-                document.getElementById("linkvertiseBtn").addEventListener("click", () => {
-                    simulateVerification("Linkvertise");
-                });
-
-                // Handle verification with Lootlabs
-                document.getElementById("lootlabsBtn").addEventListener("click", () => {
-                    simulateVerification("Lootlabs");
-                });
-
-                // Simulate verification completion (replace with actual API or logic)
-                function simulateVerification(platform) {
-                    showNotification(`Verifying through ${platform}...`, "info");
-
-                    setTimeout(() => {
-                        verificationComplete = true;
-                        proceedBtn.disabled = false;
-                        showNotification("Verification complete! You can proceed.", "success");
-                    }, 5000); // Simulate a 5-second delay for verification
-                }
-
-                proceedBtn.addEventListener("click", () => {
-                    if (verificationComplete) {
-                        window.location.href = "/keygenerator.html"; // Redirect to key generator
-                    } else {
-                        showNotification("Please complete verification first!", "error");
-                    }
-                });
-
-                function showNotification(message, type) {
-                    notification.textContent = message;
-                    notification.className = `notification ${type} show`;
-                    setTimeout(() => {
-                        notification.classList.remove("show");
-                    }, 3000);
-                }
-            });
-        </script>
-    </body>
 </html>

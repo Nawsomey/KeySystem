@@ -4,24 +4,42 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyBtn = document.querySelector(".copy-btn");
     const notification = document.getElementById("notification");
 
-    generateKeyBtn.addEventListener("click", generateKey);
-    copyBtn.addEventListener("click", copyKey);
+    if (!generateKeyBtn || !generatedKey || !notification) {
+        console.error("One or more required elements are missing from the page.");
+        return;
+    }
 
-    // Fetch existing key on page load
+    generateKeyBtn.addEventListener("click", generateKey);
+    copyBtn?.addEventListener("click", copyKey);
+
+    // Fetch the key either from the URL fragment or from the session
     fetchExistingKey();
 
     function fetchExistingKey() {
-        fetch("/getKey")
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.secretKey) {
-                    generatedKey.textContent = data.secretKey;
-                }
-            })
-            .catch((error) => {
-                console.error("Error fetching existing key:", error);
-                showNotification("Error fetching key", "error");
-            });
+        const key = getKeyFromUrl();
+        if (key) {
+            generatedKey.textContent = key;
+        } else {
+            // Fallback: If key isn't in URL, try to fetch it from the server
+            fetch("/getKey")
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.secretKey) {
+                        generatedKey.textContent = data.secretKey;
+                    } else {
+                        showNotification("No key found", "error");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error fetching existing key:", error);
+                    showNotification("Error fetching key", "error");
+                });
+        }
+    }
+
+    function getKeyFromUrl() {
+        const key = window.location.hash.substring(1); // Remove the "#" symbol
+        return key || null;
     }
 
     function showNotification(message, type) {
