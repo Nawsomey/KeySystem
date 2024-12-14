@@ -56,7 +56,7 @@ app.get("/generateKey", (req, res) => {
             console.error("Error writing to rawkeys.txt:", err);
         } else {
             exec(
-                'git config user.email "nawsifsmail@gmail.com" && git config user.name "Nawsomey" && git add . && git commit -m "Add new key" && git push --set-upstream origin main',
+                'git pull origin main && git add . && git commit -m "Add new key" && git push origin main',
                 (error, stdout, stderr) => {
                     if (error) {
                         console.error(`Git push error: ${error.message}`);
