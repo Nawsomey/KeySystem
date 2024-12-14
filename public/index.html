@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./style/styles.css" />
+        <title>Key Generator</title>
+    </head>
+
+    <body>
+        <div class="container">
+            <button
+                id="generateKeyBtn"
+                class="generate-btn"
+                onclick="generateKey()"
+            >
+                Generate Key
+            </button>
+
+            <div class="generated-key-container">
+                <div id="generatedKey" class="generated-key"></div>
+                <button class="copy-btn" onclick="copyKey()">Copy</button>
+            </div>
+
+            <div id="notification" class="notification"></div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/2.1.0/fingerprint2.min.js"></script>
+
+        <script src="app.js"></script>
+    </body>
+</html>
